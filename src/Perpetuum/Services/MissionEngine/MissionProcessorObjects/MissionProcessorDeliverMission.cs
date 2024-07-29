@@ -384,7 +384,7 @@ namespace Perpetuum.Services.MissionEngine.MissionProcessorObjects
         {
             Logger.Info("++ Deliver targets begins. characterId:" + character.Id);
 
-            var deliveryState = DeliverResult.nothingHappened;
+            //var deliveryState = DeliverResult.nothingHappened;
 
             //get the affected characters from the gang
             var charactersToProcess = GetGangMembersCached(character);

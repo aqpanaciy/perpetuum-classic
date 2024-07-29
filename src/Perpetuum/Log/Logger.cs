@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Perpetuum.Log.Formatters;
 using Perpetuum.Log.Loggers;
+using Perpetuum.Services.TechTree;
 
 namespace Perpetuum.Log
 {
@@ -20,15 +21,16 @@ namespace Perpetuum.Log
             Info(message);
         }
 
+        [Conditional("TRACE")]
         public static void Info(string message)
         {
-            var e = new LogEvent
+            var logEvent = new LogEvent
             {
                 LogType = LogType.Info,
                 Message = message
             };
 
-            Log(e);
+            Log(logEvent);
         }
 
         [Conditional("DEBUG")]
@@ -37,15 +39,16 @@ namespace Perpetuum.Log
             Warning(message);
         }
 
+        [Conditional("TRACE")]
         public static void Warning(string message)
         {
-            var e = new LogEvent
+            var logEvent = new LogEvent
             {
                 LogType = LogType.Warning,
                 Message = message
             };
 
-            Log(e);
+            Log(logEvent);
         }
 
         public static void Error(string message)
@@ -67,7 +70,7 @@ namespace Perpetuum.Log
                 ThrownException = ex
             };
 
-            Current.Log(logEvent);
+            Log(logEvent);
         }
 
         public static void Log(LogEvent logEvent)

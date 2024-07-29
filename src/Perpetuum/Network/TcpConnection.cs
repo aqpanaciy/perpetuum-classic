@@ -34,7 +34,6 @@ namespace Perpetuum.Network
             _socket.NoDelay = true;
             _socket.ReceiveBufferSize = RECEIVE_BUFFER_SIZE;
             _socket.SendBufferSize = SEND_BUFFER_SIZE;
-            _socket.SetKeepAlive(true, 1000 * 60 * 60 * 24, 5000);
 
             RemoteEndPoint = (IPEndPoint)_socket.RemoteEndPoint;
         }
@@ -61,8 +60,6 @@ namespace Perpetuum.Network
         {
             if (Interlocked.CompareExchange(ref _isDisconnected, 1, 0) == 1)
                 return;
-
-            Console.Beep(100, 200);
 
             Task.Run(() =>
             {

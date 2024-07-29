@@ -16,7 +16,6 @@ using Autofac;
 using Autofac.Builder;
 using Autofac.Core;
 using Newtonsoft.Json;
-using Open.Nat;
 using Perpetuum.Accounting;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Common;
@@ -334,7 +333,6 @@ namespace Perpetuum.Bootstrapper
                     case HostState.Stopping:
                     {
                         _container.Resolve<IProcessManager>().Stop();
-                        NatDiscoverer.ReleaseAll();
                         sender.State = HostState.Off;
                         break;
                     }
@@ -349,51 +347,6 @@ namespace Perpetuum.Bootstrapper
 
             DefaultCorporationDataCache.LoadAll();
             _container.Resolve<MissionDataCache>().CacheMissionData();
-        }
-
-        public bool TryInitUpnp(out bool success)
-        {
-            success = false;
-            var config = _container.Resolve<GlobalConfiguration>();
-            if (!config.EnableUpnp)
-                return false;
-
-            try
-            {
-                var discoverer = new NatDiscoverer();
-                NatDiscoverer.ReleaseAll();
-
-                var natDevice = discoverer.DiscoverDeviceAsync().Result;
-                if (natDevice == null)
-                {
-                    Logger.Error("[UPNP] NAT device not found!");
-                    return false;
-                }
-
-                void Map(int port)
-                {
-                    var task = natDevice.CreatePortMapAsync(new Mapping(Protocol.Tcp,port,port)).ContinueWith(t =>
-                    {
-                        Logger.Info($"[UPNP] Port mapped: {port}");
-                    });
-                    task.Wait();
-                }
-
-                Map(config.ListenerPort);
-
-                foreach (var zone in _container.Resolve<IZoneManager>().Zones)
-                {
-                    Map(zone.Configuration.ListenerPort);
-                }
-
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                Logger.Exception(ex);
-            }
-
-            return true;
         }
 
         /// <summary>
