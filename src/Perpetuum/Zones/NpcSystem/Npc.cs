@@ -99,6 +99,8 @@ namespace Perpetuum.Zones.NpcSystem
 
         public override void Update(TimeSpan time)
         {
+            _movement?.Update(npc, time);
+
             if (!npc.IsInHomeRange)
             {
                 ToHomeAI();
@@ -110,8 +112,6 @@ namespace Perpetuum.Zones.NpcSystem
                 ToAggressorAI();
                 return;
             }
-
-            _movement?.Update(npc, time);
         }
     }
 
@@ -254,15 +254,11 @@ namespace Perpetuum.Zones.NpcSystem
 
         public override void Update(TimeSpan time)
         {
-            if (_movement != null)
+            _movement?.Update(npc, time);
+            if (_movement?.Arrived ?? false)
             {
-                _movement.Update(npc, time);
-
-                if (_movement.Arrived)
-                {
-                    npc.AI.Pop();
-                    return;
-                }
+                npc.AI.Pop();
+                return;
             }
 
             base.Update(time);
@@ -300,6 +296,8 @@ namespace Perpetuum.Zones.NpcSystem
 
         public override void Update(TimeSpan time)
         {
+            _movement?.Update(npc, time);
+
             if (!npc.IsInHomeRange)
             {
                 npc.AI.Push(new HomingAI(npc));
@@ -379,8 +377,6 @@ namespace Perpetuum.Zones.NpcSystem
                 _movement = Interlocked.Exchange(ref _nextMovement, null);
                 _movement.Start(npc);
             }
-
-            _movement?.Update(npc, time);
         }
 
         private CancellationTokenSource _source;
