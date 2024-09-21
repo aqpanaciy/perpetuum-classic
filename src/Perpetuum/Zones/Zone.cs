@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Common.Loggers;
 using Perpetuum.EntityFramework;
@@ -220,37 +221,53 @@ namespace Perpetuum.Zones
             Logger.Info($"Unit exited from zone. zone:{Id} eid = {u.InfoString} ({u.CurrentPosition})");
         }
 
-        private ImmutableHashSet<Unit> _updatedUnits = ImmutableHashSet<Unit>.Empty;
+        private int _processUpdatedUnits = 0;
+        private Mutex _updatedUnitsMutex = new Mutex();
+        private HashSet<Unit> _updatedUnitsAdd = new HashSet<Unit>();
+        private HashSet<Unit> _updatedUnitsProcess = new HashSet<Unit>();
 
         private void ProcessUpdatedUnits()
         {
-            ImmutableHashSet<Unit> updatedUnits;
-
-            if ((updatedUnits = Interlocked.CompareExchange(ref _updatedUnits, ImmutableHashSet<Unit>.Empty, _updatedUnits)) == ImmutableHashSet<Unit>.Empty)
-                return;
-
-            foreach (var kvp in _units)
+            if (Interlocked.CompareExchange(ref _processUpdatedUnits, 1, 0) != 0)
             {
-                var targetUnit = kvp.Value;
-
-                foreach (var sourceUnit in updatedUnits)
-                {
-                    if ( sourceUnit == targetUnit )
-                        continue;
-
-                    sourceUnit.UpdateVisibilityOf(targetUnit);
-                    targetUnit.UpdateVisibilityOf(sourceUnit);
-
-                    if (Configuration.Protected)
-                        continue;
-
-                    var bSource = sourceUnit as IBlobableUnit;
-                    bSource?.BlobHandler.UpdateBlob(targetUnit);
-
-                    var bTarget = targetUnit as IBlobableUnit;
-                    bTarget?.BlobHandler.UpdateBlob(sourceUnit);
-                }
+                return;
             }
+
+            Task.Run(() =>
+            {
+                _updatedUnitsMutex.WaitOne();
+                {
+                    HashSet<Unit> updatedUnits = _updatedUnitsAdd;
+                    _updatedUnitsAdd = _updatedUnitsProcess;
+                    _updatedUnitsProcess = updatedUnits;
+                }
+                _updatedUnitsMutex.ReleaseMutex();
+
+                foreach (var kvp in _units)
+                {
+                    var targetUnit = kvp.Value;
+
+                    foreach (var sourceUnit in _updatedUnitsProcess)
+                    {
+                        if (sourceUnit == targetUnit)
+                            continue;
+
+                        sourceUnit.UpdateVisibilityOf(targetUnit);
+                        targetUnit.UpdateVisibilityOf(sourceUnit);
+
+                        if (Configuration.Protected)
+                            continue;
+
+                        var bSource = sourceUnit as IBlobableUnit;
+                        bSource?.BlobHandler.UpdateBlob(targetUnit);
+
+                        var bTarget = targetUnit as IBlobableUnit;
+                        bTarget?.BlobHandler.UpdateBlob(sourceUnit);
+                    }
+                }
+
+                _updatedUnitsProcess.Clear();
+            }).ContinueWith((_) => { _processUpdatedUnits = 0; });
         }
 
         private void OnUnitUpdated(Unit unit, UnitUpdatedEventArgs e)
@@ -259,7 +276,9 @@ namespace Perpetuum.Zones
             if (!visibilityUpdated)
                 return;
 
-            ImmutableInterlocked.Update(ref _updatedUnits, h => h.Add(unit));
+            _updatedUnitsMutex.WaitOne();
+            _updatedUnitsAdd.Add(unit);
+            _updatedUnitsMutex.ReleaseMutex();
         }
 
         public IEnumerable<Unit> Units => _units.Values;
@@ -291,17 +310,28 @@ namespace Perpetuum.Zones
             profiler(time);
         }
 
+        private readonly TimeSpan NOPLAYER_TIME = TimeSpan.FromMilliseconds(150);
+        private TimeSpan _updateTimer = TimeSpan.Zero;
+
         public override void Update(TimeSpan time)
         {
             UpdateSessions(time);
-            
+
             _updateUnitsTimer.Update(time).IsPassed(ProcessUpdatedUnits);
 
-            UpdateUnits(time);
+            _updateTimer += time;
+            if (_updateTimer < NOPLAYER_TIME && Players.IsNullOrEmpty())
+            {
+                return;
+            }
 
-            RiftManager?.Update(time);
-            MiningLogHandler.Update(time);
-            MeasureUpdate(time);
+            UpdateUnits(_updateTimer);
+
+            RiftManager?.Update(_updateTimer);
+            MiningLogHandler.Update(_updateTimer);
+            MeasureUpdate(_updateTimer);
+
+            _updateTimer = TimeSpan.Zero;
         }
 
         private void UpdateUnits(TimeSpan time)
