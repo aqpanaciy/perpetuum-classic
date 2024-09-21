@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Perpetuum.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="McMaster.Extensions.CommandLineUtils, Version=4.1.1.0, Culture=neutral, PublicKeyToken=6f71cb76b82f055d, processorArchitecture=MSIL">
       <HintPath>..\..\packages\McMaster.Extensions.CommandLineUtils.4.1.1\lib\net46\McMaster.Extensions.CommandLineUtils.dll</HintPath>
@@ -69,6 +72,9 @@
       <Project>{bda89e6e-0ae0-4e69-831c-3c224115d066}</Project>
       <Name>Perpetuum.Bootstrapper</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Perpetuum.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
