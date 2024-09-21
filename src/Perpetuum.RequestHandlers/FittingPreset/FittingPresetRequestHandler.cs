@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Transactions;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Data;
@@ -12,18 +13,16 @@ namespace Perpetuum.RequestHandlers.FittingPreset
 
         protected static void SendAllPresetsToCharacter(IRequest request, IFittingPresetRepository repo)
         {
-            void Sender()
+            using (var scope = Db.CreateTransaction())
             {
-                var result = repo.GetAll().ToDictionary("p", p => p.ToDictionary());
-                Message.Builder.FromRequest(request).WithData(result).Send();
-            };
+                var result = new Dictionary<string, object>();
+                Transaction.Current.OnCommited(() =>
+                {
+                    Message.Builder.FromRequest(request).WithData(result).Send();
+                });
 
-            if (Transaction.Current != null)
-            {
-                Transaction.Current.OnCommited(Sender);
+                result.AddMany(repo.GetAll().ToDictionary("p", p => p.ToDictionary()));
             }
-            else
-                Sender();
         }
 
         protected static IFittingPresetRepository GetFittingPresetRepository(Character character, bool forCorporation)

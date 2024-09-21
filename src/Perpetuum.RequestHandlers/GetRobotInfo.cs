@@ -24,12 +24,16 @@ namespace Perpetuum.RequestHandlers
 
         public void HandleRequest(IRequest request)
         {
-            TransactionScope scope = null;
-            try
+            using(var scope = Db.CreateTransaction())
             {
+                var result = new Dictionary<string, object>();
+                Transaction.Current.OnCompleted((_) =>
+                {
+                    Message.Builder.FromRequest(request).WithData(result).WrapToResult().WithEmpty().Send();
+                });
+
                 if (TryGetRobotFromZone(request, out Robot robot))
                 {
-                    scope = Db.CreateTransaction();
                     robot.EnlistTransaction();
                 }
                 else
@@ -63,16 +67,8 @@ namespace Perpetuum.RequestHandlers
                     }
                 }
 
-                var result = new Dictionary<string, object>
-                {
-                    { k.robot,robot.ToDictionary() }
-                };
-
-                Message.Builder.FromRequest(request).WithData(result).WrapToResult().WithEmpty().Send();
-            }
-            finally
-            {
-                scope?.Complete();
+                result.Add(k.robot, robot.ToDictionary());
+                scope.Complete();
             }
         }
 
