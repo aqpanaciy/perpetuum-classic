@@ -49,7 +49,7 @@ namespace Perpetuum.RequestHandlers
             Message.Builder.FromRequest(request).WithData(data).Send();
         }
 
-        private ILogger<ChatLogEvent> GetChatLogger(Character sender, Character target)
+        private IPLogger<ChatLogEvent> GetChatLogger(Character sender, Character target)
         {
             var x = (ulong)sender.Id;
             var y = (ulong)target.Id;

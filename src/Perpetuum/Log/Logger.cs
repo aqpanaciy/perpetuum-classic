@@ -1,19 +1,20 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using System;
 using System.Diagnostics;
-using Perpetuum.Log.Formatters;
-using Perpetuum.Log.Loggers;
-using Perpetuum.Services.TechTree;
 
 namespace Perpetuum.Log
 {
     public static class Logger
     {
-        public static ILogger<LogEvent> Current { private get; set; }
-
-        static Logger()
-        {
-            Current = new ColoredConsoleLogger(new DefaultLogEventFormatter());
-        }
+        public static readonly ILoggerFactory Factory = LoggerFactory.Create(builder =>
+            builder.AddConsole(options =>
+            {
+                options.IncludeScopes = true;
+                options.DisableColors = true;
+                options.Format = ConsoleLoggerFormat.Systemd;
+            }));
+        private static readonly ILogger _logger = Factory.CreateLogger("Logger");
 
         [Conditional("DEBUG")]
         public static void DebugInfo(string message)
@@ -24,13 +25,7 @@ namespace Perpetuum.Log
         [Conditional("TRACE")]
         public static void Info(string message)
         {
-            var logEvent = new LogEvent
-            {
-                LogType = LogType.Info,
-                Message = message
-            };
-
-            Log(logEvent);
+            _logger.LogInformation(message);
         }
 
         [Conditional("DEBUG")]
@@ -42,40 +37,17 @@ namespace Perpetuum.Log
         [Conditional("TRACE")]
         public static void Warning(string message)
         {
-            var logEvent = new LogEvent
-            {
-                LogType = LogType.Warning,
-                Message = message
-            };
-
-            Log(logEvent);
+            _logger.LogWarning(message);
         }
 
         public static void Error(string message)
         {
-            var logEvent = new LogEvent
-            {
-                LogType = LogType.Error,
-                Message = message
-            };
-
-            Log(logEvent);
+            _logger.LogError(message);
         }
 
         public static void Exception(Exception ex)
         {
-            var logEvent = new LogEvent
-            {
-                LogType = LogType.Error,
-                ThrownException = ex
-            };
-
-            Log(logEvent);
-        }
-
-        public static void Log(LogEvent logEvent)
-        {
-            Current.Log(logEvent);
+            _logger.LogCritical(ex, ex.Message);
         }
     }
 }

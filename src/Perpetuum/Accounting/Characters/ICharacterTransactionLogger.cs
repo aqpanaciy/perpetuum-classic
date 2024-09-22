@@ -3,7 +3,7 @@ using Perpetuum.Log;
 
 namespace Perpetuum.Accounting.Characters
 {
-    public interface ICharacterTransactionLogger : ILogger<TransactionLogEvent>
+    public interface ICharacterTransactionLogger : IPLogger<TransactionLogEvent>
     {
         
     }

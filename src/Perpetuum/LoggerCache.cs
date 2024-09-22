@@ -6,7 +6,7 @@ namespace Perpetuum
 {
     public interface ILoggerCache
     {
-        T GetOrAddLogger<T>(string loggerName, Func<T> loggerFactory) where T : ILogger;
+        T GetOrAddLogger<T>(string loggerName, Func<T> loggerFactory) where T : IPLogger;
     }
 
     public class LoggerCache : ILoggerCache

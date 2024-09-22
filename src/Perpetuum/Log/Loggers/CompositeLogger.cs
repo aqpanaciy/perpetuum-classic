@@ -1,10 +1,10 @@
 namespace Perpetuum.Log.Loggers
 {
-    public class CompositeLogger<T> : ILogger<T> where T : ILogEvent
+    public class CompositeLogger<T> : IPLogger<T> where T : ILogEvent
     {
-        private readonly ILogger<T>[] _loggers;
+        private readonly IPLogger<T>[] _loggers;
 
-        public CompositeLogger(params ILogger<T>[] loggers)
+        public CompositeLogger(params IPLogger<T>[] loggers)
         {
             _loggers = loggers;
         }

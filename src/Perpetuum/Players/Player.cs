@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Builders;
 using Perpetuum.Collections.Spatial;
@@ -127,6 +128,8 @@ namespace Perpetuum.Players
 
     public sealed class Player : Robot,IBlobableUnit,IBlobEmitter
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("Player");
+
         private readonly IExtensionReader _extensionReader;
         private readonly ICorporationManager _corporationManager;
         private readonly MissionHandler.Factory _missionHandlerFactory;
@@ -572,7 +575,7 @@ namespace Perpetuum.Players
                 }
                 catch (Exception ex)
                 {
-                    Logger.Exception(ex);
+                    _logger.LogCritical(ex, ex.Message);
                 }
             }
         }
@@ -792,14 +795,10 @@ namespace Perpetuum.Players
 
         public void WriteFQLog(string message)
         {
-            var e = new LogEvent
+            using(var scope = _logger.BeginScope("FQ"))
             {
-                LogType = LogType.Info,
-                Tag = "FQ",
-                Message = $"{InfoString} - {message}"
-            };
-
-            Logger.Log(e);
+                _logger.LogInformation($"{InfoString} - {message}");
+            }
         }
 
         private void SendError(ErrorCodes error)

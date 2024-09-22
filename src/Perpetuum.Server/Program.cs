@@ -1,98 +1,66 @@
-using System;
-using System.IO;
+using Mono.Unix;
+using Microsoft.Extensions.Logging;
 using McMaster.Extensions.CommandLineUtils;
+using Perpetuum.Log;
 using Perpetuum.Bootstrapper;
+using System;
+using System.Threading.Tasks;
+using System.Threading;
+
 
 namespace Perpetuum.Server
 {
-    public static class Program
+    public class Program
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("Program");
 
-        static int Main(string[] args)
+        [Argument(0, Description = "Path to game root", Name = "GameRoot")]
+        [FileOrDirectoryExists]
+        public static string GameRoot { get; } = "/var/opt/perpetuum/data";
+
+        private static PerpetuumBootstrapper bootstrapper;
+
+        public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+
+        private void OnExecute()
         {
-            var app = new CommandLineApplication();
-            app.HelpOption("-h|--help");
-            var gameRoot = app.Argument("<GAMEROOT>","d:\\server\\genxy");
-            var dumpCommands = app.Option("-dc|--dump-commands", "dump commands", CommandOptionType.NoValue);
-
-            var bootstrapper = new PerpetuumBootstrapper();
-
-            app.OnExecute(() =>
-            {
-                if (dumpCommands.HasValue())
-                {
-                    Console.WriteLine("dumping commands to commands.txt");
-                    bootstrapper.WriteCommandsToFile("commands.txt");
-                    return 0;
-                }
-
-                if (gameRoot.Value == null)
-                {
-                    return 2;
-                }
-
-                if (!Directory.Exists(gameRoot.Value))
-                {
-                    Console.WriteLine($"GameRoot folder was not found: {gameRoot.Value}");
-                    return 3;
-                }
-
-                bootstrapper.Init(gameRoot.Value);
-
-                return 0;
-            });
-
-            var err = 0;
             try
             {
-                err = app.Execute(args);
-                if (err == 0)
-                {
-                    Console.CancelKeyPress += (sender,eventArgs) =>
-                    {
-                        Console.WriteLine("");
-                        Console.WriteLine("STOPPING HOST IN 4 SECONDS");
-                        Console.WriteLine("");
+                bootstrapper = new PerpetuumBootstrapper();
 
-                        eventArgs.Cancel = true;
-                        bootstrapper.Stop(TimeSpan.FromSeconds(4));
-                    };
-
-                    bootstrapper.Start();
-                    bootstrapper.WaitForStop();
-                }
-                else
-                {
-                    app.ShowHelp();
-                }
+                bootstrapper.Init(GameRoot);
+                bootstrapper.Start();
             }
             catch (Exception ex)
             {
-                DisplayException(ex);
-                err = 1; // generic error
-            }
-
-            return err;
-        }
-
-        private static void DisplayException(Exception ex)
-        {
-            if (ex is AggregateException aex)
-            {
-                foreach (var innerException in aex.InnerExceptions)
-                {
-                    DisplayException(innerException);    
-                }
+                _logger.LogCritical(ex, ex.Message);
                 return;
             }
 
-            if (ex.InnerException != null)
+            int p = (int)Environment.OSVersion.Platform;
+            if ((p == 4) || (p == 6) || (p == 128))
             {
-                DisplayException(ex.InnerException);
+                UnixSignal[] signals = new UnixSignal[] {
+                    new UnixSignal(Mono.Unix.Native.Signum.SIGINT),
+                };
+
+                Task.Run(() =>
+                {
+                    var index = UnixSignal.WaitAny(signals);
+                    bootstrapper.Stop();
+                });
+            }
+            else
+            {
+                System.Console.CancelKeyPress += new ConsoleCancelEventHandler((object sender, ConsoleCancelEventArgs eventArgs) =>
+                {
+                    eventArgs.Cancel = true;
+                    bootstrapper.Stop();
+                });
             }
 
-            Console.WriteLine(ex.Message);
+            bootstrapper.WaitForStop();
+            Logger.Factory.Dispose();
         }
-
     }
 }

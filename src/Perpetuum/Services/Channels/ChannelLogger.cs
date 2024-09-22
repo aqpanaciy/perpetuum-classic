@@ -4,7 +4,7 @@ using Perpetuum.Log;
 
 namespace Perpetuum.Services.Channels
 {
-    public interface IChannelLogger : ILogger<ChatLogEvent>
+    public interface IChannelLogger : IPLogger<ChatLogEvent>
     {
         void TopicChanged(Character member, string topic);
         void MemberJoin(Character member);
@@ -15,9 +15,9 @@ namespace Perpetuum.Services.Channels
 
     public class ChannelLogger : IChannelLogger
     {
-        private readonly ILogger<ChatLogEvent> _logger;
+        private readonly IPLogger<ChatLogEvent> _logger;
 
-        public ChannelLogger(ILogger<ChatLogEvent> logger)
+        public ChannelLogger(IPLogger<ChatLogEvent> logger)
         {
             _logger = logger;
         }

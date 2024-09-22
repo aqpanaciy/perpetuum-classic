@@ -7,7 +7,7 @@ using Perpetuum.Threading;
 
 namespace Perpetuum.Log.Loggers
 {
-    public abstract class BufferedLogger<T>: Disposable, ILogger<T> where T:ILogEvent
+    public abstract class BufferedLogger<T>: Disposable, IPLogger<T> where T:ILogEvent
     {
         private readonly ConcurrentQueue<T> _logEvents = new ConcurrentQueue<T>();
         private Timer _autoFlushTimer;

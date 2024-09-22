@@ -23,11 +23,11 @@ namespace Perpetuum.Common.Loggers
 
     public static class ChatLoggerExtensions
     {
-        public static void LogMessage(this ILogger<ChatLogEvent> logger,Character sender,string message)
+        public static void LogMessage(this IPLogger<ChatLogEvent> logger,Character sender,string message)
         {
             logger.Log(new ChatLogEvent($"<{sender.Nick}> {message}"));
         }
     }
 
-    public delegate ILogger<ChatLogEvent> ChatLoggerFactory(string directory, string filename);
+    public delegate IPLogger<ChatLogEvent> ChatLoggerFactory(string directory, string filename);
 }

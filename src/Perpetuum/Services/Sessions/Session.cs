@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Transactions;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Accounting;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Data;
@@ -50,6 +51,8 @@ namespace Perpetuum.Services.Sessions
 
     public class Session : ISession
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("Session");
+
         private readonly GlobalConfiguration _globalConfiguration;
         private readonly IAccountManager _accountManager;
         private readonly IZoneManager _zoneManager;
@@ -170,7 +173,7 @@ namespace Perpetuum.Services.Sessions
 
         public void ForceQuit(ErrorCodes error = ErrorCodes.NoError, string comment = null)
         {
-            Logger.Info("force disconnect on: sessionId:" + Id + " accountID:" + AccountId + " character:" + Character + " ec:" + error);
+            _logger.LogInformation("force disconnect on: sessionId:" + Id + " accountID:" + AccountId + " character:" + Character + " ec:" + error);
             SendMessage(Message.Builder.SetCommand(Commands.Quit).WithError(error).SetData(k.comment, comment));
             _connection.Disconnect();
         }
@@ -204,7 +207,7 @@ namespace Perpetuum.Services.Sessions
 
                 Transaction.Current.OnCommited(() =>
                 {
-                    Logger.Info($"Sign in >>| AccountId = {account.Id} Email = {account.Email}");
+                    _logger.LogInformation($"Sign in >>| AccountId = {account.Id} Email = {account.Email}");
 
                     _accessLevel = account.AccessLevel | AccessLevel.normal;
                     _sessionStart = DateTime.Now; //every new account starts it's own _session
@@ -247,7 +250,7 @@ namespace Perpetuum.Services.Sessions
 
             Transaction.Current.OnCommited(() =>
             {
-                Logger.Info($"Sign out <<| AccountId =  {account.Id} Email = {account.Email}");
+                _logger.LogInformation($"Sign out <<| AccountId =  {account.Id} Email = {account.Email}");
 
                 AccountId = 0;
                 _accessLevel = AccessLevel.notDefined;
@@ -257,14 +260,14 @@ namespace Perpetuum.Services.Sessions
 
         private void OnCharacterSelected(Character character)
         {
-            Logger.Info($"Character selected \\o/ characterId:{character.Id} characterEid:{character.Eid}");
+            _logger.LogInformation($"Character selected \\o/ characterId:{character.Id} characterEid:{character.Eid}");
             character.GetSocial().SendOnlineStateToFriends(true);
             CharacterSelected?.Invoke(this, character);
         }
 
         private void OnCharacterDeselected(Character character)
         {
-            Logger.Info($"Character deselected /M\\ character:{character}");
+            _logger.LogInformation($"Character deselected /M\\ character:{character}");
 
             var m = Message.Builder.SetCommand(Commands.CharacterDeselect).WithOk();
             SendMessage(m);
@@ -304,18 +307,14 @@ namespace Perpetuum.Services.Sessions
             {
                 if (ex is PerpetuumException pex)
                 {
-                    var e = new LogEvent
+                    using(var scope = _logger.BeginScope("UREQ"))
                     {
-                        LogType = LogType.Error,
-                        Tag = "UREQ",
-                        Message = $"{pex} ip: {RemoteEndPoint.Address} account: {AccountId} character: {Character} Req: {inString}"
-                    };
-
-                    Logger.Log(e);
+                        _logger.LogError($"{pex} ip: {RemoteEndPoint.Address} account: {AccountId} character: {Character} Req: {inString}");
+                    }
                 }
                 else
                 {
-                    Logger.Exception(ex);
+                    _logger.LogCritical(ex, ex.Message);
                 }
 
                 SendMessage(Message.Builder.WithException(ex).SetCommand(request?.Command));

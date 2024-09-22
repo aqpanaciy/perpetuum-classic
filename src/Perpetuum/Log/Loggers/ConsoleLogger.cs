@@ -2,7 +2,7 @@ using System;
 
 namespace Perpetuum.Log.Loggers
 {
-    public class ConsoleLogger<T> : ILogger<T> where T : ILogEvent
+    public class ConsoleLogger<T> : IPLogger<T> where T : ILogEvent
     {
         private readonly ILogEventFormatter<T,string> _formatter;
 

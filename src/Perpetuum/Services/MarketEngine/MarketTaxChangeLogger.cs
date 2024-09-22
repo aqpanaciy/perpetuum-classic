@@ -6,7 +6,7 @@ using Perpetuum.Log;
 
 namespace Perpetuum.Services.MarketEngine
 {
-    public class MarketTaxChangeLogger : ILogger<MarketTaxChangeLogEvent>
+    public class MarketTaxChangeLogger : IPLogger<MarketTaxChangeLogEvent>
     {
         private readonly long _baseEid;
         private readonly ILogEventFormatter<MarketTaxChangeLogEvent,DbQuery> _formatter;

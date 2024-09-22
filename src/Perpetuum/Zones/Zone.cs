@@ -356,7 +356,7 @@ namespace Perpetuum.Zones
             }
         }
 
-        public ILogger<ChatLogEvent> ChatLogger { get; set; }
+        public IPLogger<ChatLogEvent> ChatLogger { get; set; }
 
         public void Enter(Character character, Command replyCommand)
         {

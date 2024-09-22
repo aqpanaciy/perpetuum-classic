@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Log;
 using Perpetuum.Threading;
 
@@ -12,6 +13,8 @@ namespace Perpetuum.Network
 {
     public class TcpConnection : Disposable, ITcpConnection
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("TcpConnection");
+
         private const int RECEIVE_BUFFER_SIZE = 8192;
         private const int SEND_BUFFER_SIZE = 8192;
         private const int MAX_PACKET_LENGTH = 1024 * 1024 * 8;
@@ -105,7 +108,7 @@ namespace Perpetuum.Network
                 }
                 else
                 {
-                    Logger.Exception(ex);
+                    _logger.LogCritical(ex, ex.Message);
                 }
             }
         }
@@ -197,7 +200,7 @@ namespace Perpetuum.Network
                 }
                 else
                 {
-                    Logger.Exception(ex);
+                    _logger.LogCritical(ex, ex.Message);
                 }
             }
             finally
@@ -288,7 +291,7 @@ namespace Perpetuum.Network
                     }
                     else
                     {
-                        Logger.Exception(ex);
+                        _logger.LogCritical(ex, ex.Message);
                     }
                 }
 
@@ -314,28 +317,24 @@ namespace Perpetuum.Network
 
         private void OnHandleSocketException(SocketException soex)
         {
-            var e = new LogEvent
+            using (var scope = _logger.BeginScope("SOCKET"))
             {
-                LogType = LogType.Error,
-                Tag = "Socket",
-                Message = $"Socket error ({soex.SocketErrorCode}) {RemoteEndPoint}"
-            };
+                _logger.LogError($"Socket error ({soex.SocketErrorCode}) {RemoteEndPoint}");
 
-            Logger.Log(e);
-
-            switch (soex.SocketErrorCode)
-            {
-                case SocketError.TimedOut:
-                case SocketError.Disconnecting:
-                case SocketError.ConnectionAborted:
-                case SocketError.Shutdown:
-                case SocketError.NotConnected:
-                case SocketError.ConnectionReset:
-                case SocketError.Interrupted:
-                    {
-                        Disconnect();
-                        break;
-                    }
+                switch (soex.SocketErrorCode)
+                {
+                    case SocketError.TimedOut:
+                    case SocketError.Disconnecting:
+                    case SocketError.ConnectionAborted:
+                    case SocketError.Shutdown:
+                    case SocketError.NotConnected:
+                    case SocketError.ConnectionReset:
+                    case SocketError.Interrupted:
+                        {
+                            Disconnect();
+                            break;
+                        }
+                }
             }
         }
     }

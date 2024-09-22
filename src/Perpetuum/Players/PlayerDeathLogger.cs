@@ -15,7 +15,7 @@ namespace Perpetuum.Players
     {
         public static readonly PlayerDeathLogger Log = new PlayerDeathLogger();
 
-        private readonly ILogger<NpcDeathLogEvent> _logger;
+        private readonly IPLogger<NpcDeathLogEvent> _logger;
 
         private PlayerDeathLogger()
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Log;
 using Perpetuum.Players;
@@ -13,6 +14,8 @@ namespace Perpetuum.Zones
 {
     public class ZoneEnterQueueService : Process,IZoneEnterQueueService
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("ZoneEnterQueueService");
+
         public delegate IZoneEnterQueueService Factory(IZone zone);
 
         private readonly IntervalTimer _timer = new IntervalTimer(TimeSpan.FromSeconds(2));
@@ -64,7 +67,7 @@ namespace Perpetuum.Zones
             if ( _processing || _queue.Count == 0 )
                 return;
 
-            Logger.Info("[Zone EQ] start processing queue. zone:" + _zone.Id + " count:" + _queue.Count);
+            _logger.LogInformation("Start processing queue. zone:" + _zone.Id + " count:" + _queue.Count);
 
             _processing = true;
             ThreadPool.UnsafeQueueUserWorkItem(_ => ProcessQueue(), null);
@@ -73,78 +76,79 @@ namespace Perpetuum.Zones
 
         private void ProcessQueue()
         {
-            try
+            using (var scope = _logger.BeginScope("ZPQ"))
             {
-                while (true)
+                try
                 {
-                    if ( !HasFreeSlot )
-                        return;
-
-                    QueueItem item;
-                    lock (_queue)
+                    while (true)
                     {
-                        if (_queue.Count == 0)
+                        if (!HasFreeSlot)
                             return;
 
-                        item = _queue.Dequeue();
-                    }
-
-                    Logger.Info("[Zone EQ] start processing character. zone:" + _zone.Id + " character:" + item.character + " command:" + item.replyCommand);
-
-                    var character = item.character;
-                    var replyCommand = item.replyCommand;
-
-                    try
-                    {
-                        LoadPlayerAndSendReply(character,replyCommand);
-                    }
-                    catch (Exception ex)
-                    {
-                        var err = ErrorCodes.ServerError;
-
-                        var gex = ex as PerpetuumException;
-                        if (gex != null)
+                        QueueItem item;
+                        lock (_queue)
                         {
-                            err = gex.error;
-                            var e = new LogEvent
+                            if (_queue.Count == 0)
+                                return;
+
+                            item = _queue.Dequeue();
+                        }
+
+
+                        _logger.LogInformation("Start processing character. zone:" + _zone.Id + " character:" + item.character + " command:" + item.replyCommand);
+
+                        var character = item.character;
+                        var replyCommand = item.replyCommand;
+                        using (var iner_scope = _logger.BeginScope("UREQ"))
+                        {
+                            try
                             {
-                                LogType = LogType.Error,
-                                Tag = "UREQ",
-                                Message = $"[UREQ] {err} Req: {replyCommand}"
-                            };
+                                LoadPlayerAndSendReply(character, replyCommand);
+                            }
+                            catch (Exception ex)
+                            {
+                                var err = ErrorCodes.ServerError;
 
-                            Logger.Log(e);
-                        }
-                        else
-                        {
-                            Logger.Exception(ex);
+                                var gex = ex as PerpetuumException;
+                                if (gex != null)
+                                {
+                                    _logger.LogError($"[UREQ] {gex.error} Req: {replyCommand}");
+                                }
+                                else
+                                {
+                                    _logger.LogCritical(ex, ex.Message);
+                                }
+
+                                character.CreateErrorMessage(replyCommand, err).Send();
+                            }
                         }
 
-                        character.CreateErrorMessage(replyCommand,err).Send();
+                        _logger.LogInformation("End processing character. zone:" + _zone.Id + " character:" + item.character + " command:" + item.replyCommand);
+
+                        OnQueueChanged();
                     }
-
-                    Logger.Info("[Zone EQ] end processing character. zone:" + _zone.Id + " character:" + item.character + " command:" + item.replyCommand);
-
-                    OnQueueChanged();
                 }
-            }
-            finally
-            {
-                _processing = false;
-                Logger.Info("[Zone EQ] end processing queue. zone:" + _zone.Id + " count:" + _queue.Count);
+                finally
+                {
+                    _processing = false;
+                    _logger.LogInformation("End processing queue. zone:" + _zone.Id + " count:" + _queue.Count);
+                }
             }
         }
 
         public void EnqueuePlayer(Character character, Command replyCommand)
         {
-            Logger.Info("[Zone EQ] start enqueue player. zone:" + _zone.Id + " character:" + character + " command:" + replyCommand);
-            lock (_queue)
+            using (var scope = _logger.BeginScope("ZEP"))
             {
-                _queue.Enqueue(new QueueItem { character = character, replyCommand = replyCommand });
-            }
+                _logger.LogInformation("Start enqueue player. zone:" + _zone.Id + " character:" + character + " command:" + replyCommand);
+                lock (_queue)
+                {
+                    _queue.Enqueue(new QueueItem { character = character, replyCommand = replyCommand });
+                }
 
-            OnQueueChanged();
-            Logger.Info("[Zone EQ] end enqueue player. zone:" + _zone.Id + " character:" + character + " command:" + replyCommand);
+                OnQueueChanged();
+                _logger.LogInformation("End enqueue player. zone:" + _zone.Id + " character:" + character + " command:" + replyCommand);
+            }
         }
 
         public void RemovePlayer(Character character)
@@ -186,19 +190,19 @@ namespace Perpetuum.Zones
 
         public void LoadPlayerAndSendReply(Character character, Command replyCommand)
         {
-            if (!_zone.TryGetPlayer(character,out Player player))
+            if (!_zone.TryGetPlayer(character, out Player player))
             {
-                Logger.Info("[Zone EQ] start loading player. zone:" + _zone.Id + " character:" + character.Id);
-                player = Player.LoadPlayerAndAddToZone(_zone,character);
-                Logger.Info("[Zone EQ] end loading player. zone:" + _zone.Id + " character:" + character.Id);
+                _logger.LogInformation("Start loading player. zone:" + _zone.Id + " character:" + character.Id);
+                player = Player.LoadPlayerAndAddToZone(_zone, character);
+                _logger.LogInformation("End loading player. zone:" + _zone.Id + " character:" + character.Id);
             }
 
-            SendReplyCommand(character,player, replyCommand);
+            SendReplyCommand(character, player, replyCommand);
         }
 
         public void SendReplyCommand(Character character, Player player, Command replyCommand)
         {
-            Logger.Info("[Zone EQ] start sending reply command. player: " + player.Eid + " character:" + character.Id + " reply:" + replyCommand);
+            _logger.LogInformation("Start sending reply command. player: " + player.Eid + " character:" + character.Id + " reply:" + replyCommand);
 
             var result = new Dictionary<string, object>
             {
@@ -220,12 +224,12 @@ namespace Perpetuum.Zones
             };
 
             Message.Builder.SetCommand(replyCommand)
-                           .WithData(result)
-                           .WrapToResult()
-                           .ToCharacter(character)
-                           .Send();
+                            .WithData(result)
+                            .WrapToResult()
+                            .ToCharacter(character)
+                            .Send();
 
-            Logger.Info("[Zone EQ] end sending reply command. player: " + player.Eid + " character:" + character.Id + " reply:" + replyCommand);
+            _logger.LogInformation("End sending reply command. player: " + player.Eid + " character:" + character.Id + " reply:" + replyCommand);
         }
 
         public Dictionary<string, object> GetQueueInfoDictionary()

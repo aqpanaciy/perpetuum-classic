@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Builders;
 using Perpetuum.Common.Loggers;
@@ -36,6 +37,8 @@ namespace Perpetuum.Zones
 {
     public class ZoneSession : IZoneSession
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("ZoneSession");
+
         public static readonly IZoneSession None = new NullZoneSession();
         private static readonly IIDGenerator<int> _idGenerator = IDGenerator.CreateIntIDGenerator();
 
@@ -209,20 +212,16 @@ namespace Perpetuum.Zones
 
         private void WriteFQLog(string message)
         {
-            var info = string.Empty;
-
-            var player = _player;
-            if (player != null)
-                info = player.InfoString;
-
-            var e = new LogEvent
+            using (var scope = _logger.BeginScope("FQ"))
             {
-                LogType = LogType.Info,
-                Tag = "FQ",
-                Message = $"{info} - {message}"
-            };
+                var info = string.Empty;
 
-            Logger.Log(e);
+                var player = _player;
+                if (player != null)
+                    info = player.InfoString;
+
+                _logger.LogInformation($"{info} - {message}");
+            }
         }
 
         private void WritePacketLog(Packet packet, string message = null)
@@ -234,14 +233,10 @@ namespace Perpetuum.Zones
         [Conditional("DEBUG")]
         private void LogGenxyException(Packet packet, PerpetuumException gex)
         {
-            var e = new LogEvent
+            using (var scope = _logger.BeginScope("ZPACKET"))
             {
-                LogType = LogType.Error,
-                Tag = "ZPACKET",
-                Message = $"command:{packet.Command} zone:{_zone.Id} player:{_player.InfoString} ex:{gex}"
-            };
-
-            Logger.Log(e);
+                _logger.LogError($"command:{packet.Command} zone:{_zone.Id} player:{_player.InfoString} ex:{gex}");
+            }
         }
 
         private BeamsMonitor _beamsMonitor;
@@ -255,7 +250,7 @@ namespace Perpetuum.Zones
 
             var character = ZoneTicket.GetCharacterFromEncryptedTicket(encrypted);
             character.ThrowIfEqual(null, ErrorCodes.WTFErrorMedicalAttentionSuggested);
-            Logger.Info($"Socket authentication successful. zone: {_zone.Id} character: {character.Id}");
+            _logger.LogInformation($"Socket authentication successful. zone: {_zone.Id} character: {character.Id}");
             Character = character;
             AccessLevel = character.AccessLevel;
 
@@ -430,7 +425,7 @@ namespace Perpetuum.Zones
         private void HandleEnablePvp(Packet packet)
         {
             _zone.Configuration.Type.ThrowIfEqual(ZoneType.Training, ErrorCodes.NoPvpInTraining);
-            Logger.Info($"Pvp enabled. zone:{_zone.Id} player:{_player.InfoString}");
+            _logger.LogInformation($"Pvp enabled. zone:{_zone.Id} player:{_player.InfoString}");
 
             WritePacketLog(packet);
             _player.ApplyPvPEffect();

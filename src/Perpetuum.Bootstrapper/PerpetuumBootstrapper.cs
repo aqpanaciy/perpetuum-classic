@@ -16,6 +16,7 @@ using Autofac;
 using Autofac.Builder;
 using Autofac.Core;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 using Perpetuum.Accounting;
 using Perpetuum.Accounting.Characters;
 using Perpetuum.Common;
@@ -253,7 +254,6 @@ namespace Perpetuum.Bootstrapper
             _builder = new ContainerBuilder();
             InitContainer(gameRoot);
             _container = _builder.Build();
-            Logger.Current = _container.Resolve<ILogger<LogEvent>>();
 
             var config = _container.Resolve<GlobalConfiguration>();
             _container.Resolve<IHostStateService>().State = HostState.Init;
@@ -1295,7 +1295,7 @@ namespace Perpetuum.Bootstrapper
                 fileLogger.AutoFlushInterval = TimeSpan.FromSeconds(10);
 
                 return new CompositeLogger<LogEvent>(fileLogger, new ColoredConsoleLogger(formater));
-            }).As<ILogger<LogEvent>>();
+            }).As<IPLogger<LogEvent>>();
 
             _builder.RegisterType<CombatLogger>();
             _builder.RegisterType<CombatLogHelper>();

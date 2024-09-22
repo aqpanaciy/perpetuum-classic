@@ -51,7 +51,7 @@ namespace Perpetuum.Zones
         IZoneUnitService UnitService { get; }
         IZoneEnterQueueService EnterQueueService { get; }
 
-        ILogger<ChatLogEvent> ChatLogger { get; }
+        IPLogger<ChatLogEvent> ChatLogger { get; }
 
         void AddUnit(Unit unit);
         void RemoveUnit(Unit unit);

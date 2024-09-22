@@ -2,7 +2,7 @@ using System;
 
 namespace Perpetuum.Log.Loggers
 {
-    public class DelegateLogger<T> : ILogger<T> where T : ILogEvent
+    public class DelegateLogger<T> : IPLogger<T> where T : ILogEvent
     {
         private readonly Action<T> _logger;
 

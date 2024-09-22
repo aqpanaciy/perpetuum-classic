@@ -11,7 +11,7 @@ namespace Perpetuum.Groups.Corporations.Loggers
     public class CorporationLogger
     {
         private readonly Corporation _corporation;
-        private readonly ILogger<CorporationLogEvent> _logger;
+        private readonly IPLogger<CorporationLogEvent> _logger;
 
         public delegate CorporationLogger Factory(Corporation corporation);
 
