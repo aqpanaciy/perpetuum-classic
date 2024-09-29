@@ -336,8 +336,6 @@ namespace Perpetuum.Zones.PBS
             if (!_timer.Passed) return;
             _timer.Reset();
 
-            Logger.DebugInfo($" ---------- KEZDUNK ---------- [{Owner.InfoString}]");
-
             //itt ez az egesz arra kell, hogy amikor megindul a server akkor belemegy valami statebe
             //ott hasznal zonat, aztan csak nez, hogy nincs kinn az objekt, igen, mert az is epp pakolodik ki
             //

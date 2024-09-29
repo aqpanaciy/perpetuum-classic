@@ -346,8 +346,6 @@ namespace Perpetuum.Services.MissionEngine
         /// <returns></returns>
         public void MissionAdvanceGroupOrder(MissionProgressUpdate missionProgressUpdate)
         {
-            Logger.DebugInfo("advancing mission target group on zone: " + missionProgressUpdate);
-
             if (missionProgressUpdate.isFinished)
             {
                 _runningMissions.Remove(missionProgressUpdate.missionId);
@@ -358,12 +356,9 @@ namespace Perpetuum.Services.MissionEngine
                 {
                     _cachedMissionTargets.Remove(cachedMissionTarget.Id);
                 }
-                Logger.DebugInfo("mission got finished and removed! " + missionProgressUpdate);
             }
             else
             {
-                Logger.DebugInfo("mission targetorder advancing" + missionProgressUpdate);
-
                 if (_runningMissions.TryGetValue(missionProgressUpdate.missionId,out ZoneMissionInProgress mzp))
                 {
                     mzp.SetCurrentTargetOrder(missionProgressUpdate);

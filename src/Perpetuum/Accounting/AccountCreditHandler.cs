@@ -56,7 +56,6 @@ namespace Perpetuum.Accounting
 
             if (records.Count == 0)
             {
-                Logger.DebugInfo("no new account credit record was found");
                 return;
             }
 

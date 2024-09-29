@@ -714,8 +714,6 @@ namespace Perpetuum.Zones.NpcSystem
 
         private void HandleNpcDead([NotNull] IZone zone, Unit killer, Player tagger)
         {
-            Logger.DebugInfo($"   >>>> NPC died.  Killer unitName:{killer.Name} o:{killer.Owner}   Tagger botname:{tagger?.Name} o:{killer.Owner} characterId:{tagger?.Character.Id}");
-
             using (var scope = Db.CreateTransaction())
             {
                 LootContainer.Create().SetOwner(tagger).AddLoot(LootGenerator).BuildAndAddToZone(zone, CurrentPosition);
@@ -724,21 +722,15 @@ namespace Perpetuum.Zones.NpcSystem
 
                 if (GetMissionGuid() != Guid.Empty)
                 {
-                    Logger.DebugInfo("   >>>> NPC is mission related.");
-
                     SearchForMissionOwnerAndSubmitKill(zone, killer);
                 }
                 else
                 {
-                    Logger.DebugInfo("   >>>> independent NPC.");
-
                     if (killerPlayer != null)
                         EnqueueKill(killerPlayer, killer);
                 }
 
                 var ep = Db.Query().CommandText("GetNpcKillEp").SetParameter("@definition", Definition).ExecuteScalar<int>();
-
-                //Logger.Warning($"Ep4Npc:{ep} def:{Definition} {ED.Name}");
 
                 if (zone.Configuration.IsBeta)
                     ep *= 2;
@@ -809,8 +801,6 @@ namespace Perpetuum.Zones.NpcSystem
             {
                 eventSourcePlayer = killerPlayer;
             }
-
-            Logger.DebugInfo($"   >>>> EventSource: botName:{eventSourcePlayer.Name} o:{eventSourcePlayer.Owner} characterId:{eventSourcePlayer.Character.Id} MissionOwner: botName:{missionOwnerPlayer.Name} o:{missionOwnerPlayer.Owner} characterId:{missionOwnerPlayer.Character.Id}");
 
             //local enqueue, this is the proper player, we can skip gang
             missionOwnerPlayer.MissionHandler.EnqueueMissionEventInfoLocally(new KillEventInfo(eventSourcePlayer, this, CurrentPosition));

@@ -81,8 +81,6 @@ namespace Perpetuum.Services.ProductionEngine
                     continue;
                 }
 
-                Logger.DebugInfo($"compdef: {component.EntityDefault.Definition} comp amount:{component.Amount} item def:{targetItem.Definition} qty:{targetItem.Quantity} defname:{targetItem.ED.Name}");
-
                 var nominalQuantity = component.Amount * batchCount;
 
                 var newQuantity = (int)(component.Amount * materialEfficiency * batchCount);

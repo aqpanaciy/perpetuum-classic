@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Perpetuum.Common.Loggers;
 using Perpetuum.Data;
 using Perpetuum.Log;
 using Perpetuum.Network;
@@ -53,6 +55,8 @@ namespace Perpetuum.Services.Relay
 
     public class ServerInfoManager : IServerInfoManager
     {
+        private static readonly ILogger _logger = Logger.Factory.CreateLogger("Logger");
+
         private readonly ISessionManager _sessionManager;
 
         public ServerInfoManager(ISessionManager sessionManager)
@@ -104,7 +108,7 @@ namespace Perpetuum.Services.Relay
                 }
                 finally
                 {
-                    Logger.DebugInfo(reply);
+                    _logger.LogInformation(reply);
                 }
             }
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Perpetuum.Log;
@@ -85,9 +86,10 @@ namespace Perpetuum.Units
                 info.ResetLineOfSight();
         }
 
+        [Conditional("DEBUG")]
         protected virtual void OnUnitVisibilityUpdated(Unit target, Visibility visibility)
         {
-            Logger.DebugInfo(InfoString + " => " + target.InfoString + " => " + visibility);
+            
         }
 
         protected virtual bool IsDetected(Unit target)
@@ -156,7 +158,6 @@ namespace Perpetuum.Units
                 if (h != null && h.Expired)
                 {
                     losHolder = null;
-                    Logger.DebugWarning("LOS expired");
                 }
 
                 var holder = LazyInitializer.EnsureInitialized(ref losHolder, () =>

@@ -77,7 +77,6 @@ namespace Perpetuum.Zones.Blobs
 
             _blobLevel = Math.Max(0.0, _blobLevel);
 
-            Logger.DebugInfo($"[{_owner.InfoString}] Update blob level: {_blobLevel}");
             _isDirty = true;
         }
 

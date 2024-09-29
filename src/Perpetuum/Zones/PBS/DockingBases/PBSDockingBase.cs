@@ -217,15 +217,11 @@ namespace Perpetuum.Zones.PBS.DockingBases
         public override void OnDeleteFromDb()
         {
             //NO BASE CLASS CALL -> szandekos
-            Logger.DebugInfo($"[{InfoString}] docking base on delete");
-            Logger.DebugInfo($"[{InfoString}] zonaid jo, helperes cucc jon");
             PBSHelper.DeletePBSDockingBase(Zone,this).ThrowIfError();
         }
 
         protected override void OnRemovedFromZone(IZone zone)
         {
-            Logger.DebugInfo($"[{InfoString}] pbsbase remove from zone");
-
             _pbsObjectHelper.RemoveFromZone(zone);
 
             PBSHelper.SendPBSDockingBaseDeleteToProduction(Eid);
@@ -240,8 +236,7 @@ namespace Perpetuum.Zones.PBS.DockingBases
         {
             IsLootGenerating = true;
             _trashWasKilled = true; //signal trash
-            Logger.DebugInfo($"[{InfoString}] loot generating -> true");
-
+            
             var zone = Zone;
             _pbsObjectHelper.DropLootToZoneFromBase(zone, this, killer);
 

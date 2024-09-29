@@ -38,10 +38,6 @@ namespace Perpetuum.Units.DockingBases
                 return null;
 
             var unit = _zoneManager.GetUnit<T>(unitEid);
-            if (unit == null)
-            {
-                Logger.DebugWarning($"{typeof(T).Name} not found on zone! eid:{unitEid}");
-            }
 
             return unit;
         }

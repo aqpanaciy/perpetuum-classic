@@ -77,15 +77,12 @@ namespace Perpetuum.Zones.NpcSystem.Presences
                 {
                     //select from the mission's
                     npcTemplateRelation = _robotTemplateRelations.GetRandomByMissionLevelAndRaceID(level, selectedRace);
-                    Logger.DebugInfo($" selected by race {npcTemplateRelation.EntityDefault.Name}");
                 }
                 else
                 {
                     //somekind of saturation 15%
                     npcTemplateRelation = level == 0 ? _robotTemplateRelations.GetRandomDummyDecoyOthers() : 
                                                        _robotTemplateRelations.GetRandomIndustrialNpc(level);
-
-                    Logger.DebugInfo($" selected as indy {npcTemplateRelation.EntityDefault.Name}");
                 }
 
                 var builder = CreateFlockConfigurationBuilder()

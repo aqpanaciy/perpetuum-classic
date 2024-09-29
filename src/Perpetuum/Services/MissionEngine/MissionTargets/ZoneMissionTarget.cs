@@ -408,10 +408,5 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
             });
         }
 
-        [Conditional("DEBUG")]
-        public void Log(string message)
-        {
-            Logger.DebugInfo("--- zt -> " + message);
-        }
     }
 }

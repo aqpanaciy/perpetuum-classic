@@ -48,10 +48,6 @@ namespace Perpetuum.Containers
 
             var strBuilder = new StringBuilder();
 
-            void WriteLog(string message) => Logger.DebugInfo($"[Container logwriter] ({_container.Eid}) {message}");
-
-            WriteLog("Start");
-
             foreach (var logEntryList in logs.Slice(50))
             {
                 var cnt = 0;
@@ -85,11 +81,7 @@ namespace Perpetuum.Containers
                 }
 
                 Db.Query().CommandText(strBuilder.ToString()).SetParameters(parameters).ExecuteNonQuery().ThrowIfEqual(0,ErrorCodes.SQLInsertError);
-
-                WriteLog("Batch executed");
             }
-
-            WriteLog("Finished");
         }
 
         public void ClearLog(Character character)

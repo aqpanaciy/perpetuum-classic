@@ -242,8 +242,7 @@ namespace Perpetuum.Zones.PBS
             foreach (var player in playersInRange)
             {
                 var pushPos = position.GetPositionTowards2D(player.CurrentPosition, Math.Max(range - safeMargin, 0.05));
-                Logger.DebugInfo($"player bumped from:{player.CurrentPosition.ToDoubleString2D()} to:{pushPos.ToDoubleString2D()} distance:{pushPos.TotalDistance2D(player.CurrentPosition)}");
-
+                
                 player.CurrentPosition = pushPos;
                 player.SendForceUpdate();
             }
@@ -353,8 +352,6 @@ namespace Perpetuum.Zones.PBS
 
             zone.CleanEnvironmentByUnit(removedUnit);
 
-            Logger.DebugInfo("terrain administration done, delete start");
-            Logger.DebugInfo("deleting from zone user entities");
             zone.UnitService.RemoveUserUnit(removedUnit);
         }
 
@@ -887,11 +884,9 @@ namespace Perpetuum.Zones.PBS
 
         public static void DropLootToZoneFromBase(IZone zone, PBSDockingBase pbsDockingBase, Unit killer)
         {
-            Logger.DebugInfo("async hand dead started");
             if (pbsDockingBase == null)
                 return;
 
-            Logger.DebugInfo("valid async target");
             Db.CreateTransactionAsync(scope =>
             {
                 HandleDockingBaseDead(zone, pbsDockingBase, killer).ThrowIfError();
@@ -901,8 +896,6 @@ namespace Perpetuum.Zones.PBS
         public static ErrorCodes HandleDockingBaseDead(IZone zone, PBSDockingBase pbsDockingBase, Unit killer)
         {
             var ec = ErrorCodes.NoError;
-
-            Logger.DebugInfo(" ########    docking base SQL DROP LOOT Start ");
 
             try
             {
@@ -931,9 +924,6 @@ namespace Perpetuum.Zones.PBS
 
                 WritePBSLog(PBSLogType.killed, pbsDockingBase.Eid, pbsDockingBase.Definition, pbsDockingBase.Owner,
                     background: false, zoneId: zone.Id, killerCharacterId: killerCharacterId);
-
-                Logger.DebugInfo(" ########    docking base SQL DROP LOOT STOP ");
-
             }
             catch (Exception ex)
             {
@@ -962,7 +952,6 @@ namespace Perpetuum.Zones.PBS
 
             foreach (var oneSlice in allEntities.Slice(1000))
             {
-                Logger.DebugInfo("slice dropping");
                 var lootPosition = pbsDockingBase.CurrentPosition.GetRandomPositionInRange2D(0,
                     pbsDockingBase.GetConstructionRadius());
 
@@ -1172,7 +1161,6 @@ namespace Perpetuum.Zones.PBS
             while (dockingBase.IsLootGenerating)
             {
                 Thread.Sleep(100);
-                Logger.DebugInfo("loot is being generated for base " + dockingBase.Name + " " + dockingBase.Eid);
                 if (counter++ > 9000)
                 {
                     Logger.Error("loot generator thread got stuck for base: " + dockingBase.Name + " " + dockingBase.Eid);

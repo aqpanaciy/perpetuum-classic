@@ -89,8 +89,6 @@ namespace Perpetuum.Zones.NpcSystem.Presences
                             if (!isLastWave)
                                 _fsm.Push(CreateDelayState(TimeSpan.FromSeconds(5)));
                         };
-
-                        Logger.DebugInfo($"Flock spawned: {f}");
                     }
                 });
             });

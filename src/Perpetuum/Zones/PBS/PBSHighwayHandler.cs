@@ -97,7 +97,6 @@ namespace Perpetuum.Zones.PBS
                 l.AddRange(pbsHighwayNode.GetOutgoingLiveSegments());
             }
 
-            Logger.DebugInfo($"collected {l.Count} live segments");
             return l;
         }
 
@@ -105,12 +104,7 @@ namespace Perpetuum.Zones.PBS
         {
             var areas = _areaQueue.TakeAll().ToList();
 
-            Logger.DebugInfo($"processing {areas.Count} highway areas");
-
             areas = areas.Distinct().ToList();
-
-            Logger.DebugInfo($"processing {areas.Count} unique areas");
-
 
             using (new TerrainUpdateMonitor(_zone))
             {

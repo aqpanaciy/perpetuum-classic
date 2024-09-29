@@ -134,8 +134,6 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
 
         protected override bool CanHandleMissionEvent(ReachPositionEventInfo e)
         {
-            Log("checking position " + MyTarget.targetPosition + " VS " + e.ReachedPoint);
-
             if (!IsZoneOrPositionValid(e.ReachedPoint.ToPosition()))
                 return false;
 
@@ -146,8 +144,6 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
         {
             OnTargetComplete();
             this.SendReportToMissionEngine();  
-            Log("position reached! " + MyTarget.targetPosition + " current: " + e.ReachedPoint);
-            
         }
     }
 
@@ -187,15 +183,11 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
             //save for later use
             OnTargetComplete();
 
-            this.SendReportToMissionEngine();  
-
-            Log("pop npc position reached! " + MyTarget.targetPosition + " current: " + e.PoppedAtPoint);
+            this.SendReportToMissionEngine();
         }
 
         protected override bool CanHandleMissionEvent(PopNpcEventInfo e)
         {
-            Log("pop npc checking position " + MyTarget.targetPosition + " VS " + e.PoppedAtPoint);
-
             if (!IsZoneOrPositionValid(e.PoppedAtPoint.ToPosition()))
                 return false;
 
@@ -294,8 +286,6 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
                 return false;
             }
 
-            Log("marked npc was locked " + this);
-
             return true;
         }
 
@@ -386,7 +376,6 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
                 if (MyZoneMissionInProgress.missionGuid != e.KilledNpc.GetMissionGuid())
                     return false;
 
-                Log("marked npc was killed " + this);
                 return true;
             }
 
@@ -397,11 +386,7 @@ namespace Perpetuum.Services.MissionEngine.MissionTargets
             if (!IsZoneOrPositionValid(e.KillPoint.ToPosition()))
                 return false;
 
-            Log("kill target progressed " + this);
-
             return true;
-
-
         }
 
         protected override void OnTargetComplete()

@@ -75,7 +75,6 @@ namespace Perpetuum.RequestHandlers
                 parents.Add(record.parent);
 
                 itemsDict.Add("c" + count++, oneEntry);
-                Logger.DebugInfo($"{record.parent} {EntityDefault.Get(record.definition).Name} {quantitySum}");
             }
 
             var result = new Dictionary<string, object>
@@ -159,7 +158,6 @@ namespace Perpetuum.RequestHandlers
                 foreach (var pair in parentsDict)
                 {
                     var v = (Dictionary<string, object>)pair.Value;
-                    Logger.DebugInfo($"{v[k.eid]} {v[k.parent]} {v[k.eName]} {EntityDefault.Get((int)v[k.definition]).Name}");
                 }
 
             }

@@ -72,7 +72,6 @@ namespace Perpetuum.RequestHandlers.Extensions
                             continue;
 
                         //extension cant be downgraded because
-                        Logger.DebugWarning($"extension:{_extensionReader.GetExtensionName(requiresExtension.id)} requires:{_extensionReader.GetExtensionName(extensionId)} on level:{requiresExtension.level} current level:{currentExtensionLevel}  requests:{requiresExtension.id}->this:{extensionId}");
                         throw PerpetuumException.Create(ErrorCodes.ExtensionIsRequired)
                             .SetData("thisNeeds", requiresExtension.id)
                             .SetData("level",requiresExtension.level)

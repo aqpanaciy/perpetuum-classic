@@ -96,14 +96,10 @@ namespace Perpetuum.Zones.PBS
 
         public void RemoveFromZone(IZone zone)
         {
-            Logger.DebugInfo("objecthelper removefromzone");
-            Logger.DebugInfo("async helper cucc start");
-
             Db.CreateTransactionAsync(scope =>
             {
                 ConnectionHandler.RemoveAllConnections();
                 _pbsUnit.OnPBSObjectRemovedFromZone(zone);
-                Logger.DebugInfo("connections remove");
             });
         }
 
@@ -253,10 +249,7 @@ namespace Perpetuum.Zones.PBS
                     var dockingBase = _pbsUnit as PBSDockingBase;
                     if (dockingBase != null)
                     {
-
-                        Logger.DebugInfo("dropping loot from base");
                         PBSHelper.DropLootToZoneFromBaseItems(zone, dockingBase, false);
-
                     }
                     _pbsUnit.RemoveFromZone();
                    

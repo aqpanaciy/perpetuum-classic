@@ -160,7 +160,6 @@ namespace Perpetuum.Services.MissionEngine.MissionProcessorObjects
 
         private void MissionTargetAdvanceById(Character character, int targetId, int missionId, bool isComplete, IDictionary<string, object> data, Guid missionGuid)
         {
-            Logger.DebugInfo("processing target by id: " + targetId + " missionId: " + missionId);
             if (!GetTargetInProgress_and_missionInProgress(character, targetId, missionId, missionGuid, out MissionTargetInProgress missionTargetInProgress, out MissionInProgress missionInProgress))
             {
                 Logger.Error("targetinprogress was not found. targetId: " + targetId + " missionId: " + missionId);
@@ -173,8 +172,6 @@ namespace Perpetuum.Services.MissionEngine.MissionProcessorObjects
 
         private void MissionTargetAdvanceByType(Character character, MissionTargetType targetType, bool isComplete, Dictionary<string, object> data)
         {
-            Logger.DebugInfo("process target by type: " + targetType);
-
             var kvpList = GetTargetInProgress_and_missionInProgressByTargetType(character, targetType);
 
             if (kvpList.IsNullOrEmpty())

@@ -16,22 +16,10 @@ namespace Perpetuum.Log
             }));
         private static readonly ILogger _logger = Factory.CreateLogger("Logger");
 
-        [Conditional("DEBUG")]
-        public static void DebugInfo(string message)
-        {
-            Info(message);
-        }
-
         [Conditional("TRACE")]
         public static void Info(string message)
         {
             _logger.LogInformation(message);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DebugWarning(string message)
-        {
-            Warning(message);
         }
 
         [Conditional("TRACE")]

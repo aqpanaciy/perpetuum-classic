@@ -43,7 +43,6 @@ namespace Perpetuum.Groups.Corporations
             {
                 corporationEid = (long)data[k.corporationEID];
                 _corporations.Remove(corporationEid);
-                Logger.DebugInfo($"corp removed from cache:{corporationEid} zone:{_zone.Id}");
                 return;
             }
 
@@ -57,8 +56,6 @@ namespace Perpetuum.Groups.Corporations
 
                     var corporation = GetOrAddCorporation(corporationEid);
                     corporation.cache_addOrUpdateMember(characterId, role);
-
-                    Logger.DebugInfo($"role changed on zone:{_zone.Id} character:{characterId} role:{role}");
                     break;
 
                 case CorporationCommand.TransferMember:
@@ -72,14 +69,12 @@ namespace Perpetuum.Groups.Corporations
                     {
                         var fromCorporation = GetOrAddCorporation(fromEid);
                         fromCorporation.cache_removeMember(characterId);
-                        Logger.DebugInfo($"character removed from corp on zone:{_zone.Id} characterid:{characterId} corporationEID:{fromEid}");
                     }
 
                     if (!DefaultCorporationDataCache.IsCorporationDefault(toEid))
                     {
                         var toCorporation = GetOrAddCorporation(toEid);
                         toCorporation.cache_addOrUpdateMember(characterId, role);
-                        Logger.DebugInfo($"character added to corp on zone:{_zone.Id} characterid:{characterId} corporationEID:{toEid}");
                     }
 
                     break;

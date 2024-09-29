@@ -102,7 +102,6 @@ namespace Perpetuum.Services.MissionEngine.MissionProcessorObjects
                 return;
             }
 
-            Logger.DebugInfo($"    >>>> missionGuid:{guid.ToString()} mission owner:{ownerCharacter.Id} new participant:{doerCharacter.Id}");
             missionInProgress.AddParticipant(doerCharacter);
         }
 
